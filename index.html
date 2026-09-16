@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>پویان ترید PRO | DOGE</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head><body>
+<header><div class="brand"><b>PT</b><div><h1>پویان ترید PRO</h1><small>DOGE/USDT • داشبورد تحلیل بازار</small></div></div>
+<div class="live"><i></i><span id="conn">در حال اتصال</span></div></header>
+<main>
+<section class="top"><div><h2>مرکز تحلیل هوشمند DOGE</h2><p>داده بازار زنده + تحلیل چندشاخصی + مدیریت ریسک</p></div>
+<div class="actions"><select id="tf"><option>1m</option><option>5m</option><option selected>15m</option><option>1h</option><option>4h</option><option>1d</option></select><button onclick="load()">↻ بروزرسانی</button></div></section>
+
+<section class="ticker">
+<div><small>قیمت</small><strong id="price">—</strong><em id="chg">—</em></div>
+<div><small>24h High</small><strong id="hi">—</strong></div><div><small>24h Low</small><strong id="lo">—</strong></div>
+<div><small>حجم 24h</small><strong id="vol">—</strong></div><div><small>معاملات</small><strong id="trades">—</strong></div>
+</section>
+
+<section class="signalbox"><div><small>سیگنال ترکیبی</small><strong id="signal">—</strong><span id="confidence">—</span></div>
+<div><small>امتیاز خرید</small><b id="buyScore">—</b></div><div><small>امتیاز فروش</small><b id="sellScore">—</b></div>
+<div><small>روند</small><b id="trend">—</b></div><div><small>ریسک</small><b id="risk">—</b></div></section>
+
+<section class="grid2"><div class="panel chart"><div class="head"><h3>نمودار قیمت</h3><span id="stamp">—</span></div><canvas id="chart"></canvas></div>
+<div class="panel"><div class="head"><h3>سنجه‌های تکنیکال</h3><span>Live calculation</span></div><div id="metrics"></div></div></section>
+
+<section class="cards">
+<div class="panel"><div class="head"><h3>حمایت / مقاومت</h3></div><div id="levels"></div></div>
+<div class="panel"><div class="head"><h3>ورود و مدیریت معامله</h3></div><div id="trade"></div></div>
+<div class="panel"><div class="head"><h3>قدرت بازار</h3></div><div id="market"></div></div>
+</section>
+
+<section class="grid2"><div class="panel"><div class="head"><h3>Order Book • سفارش‌های بزرگ</h3></div>
+<div class="bookbar"><span id="bidbar">خرید —</span><span id="askbar">فروش —</span></div><div id="orders"></div>
+<p class="muted">فشار خرید/فروش از دفتر سفارش عمومی محاسبه می‌شود؛ هویت معامله‌گران مشخص قابل تشخیص نیست.</p></div>
+<div class="panel"><div class="head"><h3>تحلیل چندلایه</h3></div><div id="reasons"></div></div></section>
+
+<section class="panel"><div class="head"><h3>وضعیت تایم‌فریم‌ها</h3></div><div class="timeframes" id="timeframes"></div></section>
+<footer>پویان ترید PRO — ابزار تحلیلی و آموزشی است؛ سیگنال‌ها تضمین سود یا توصیه مالی قطعی نیستند.</footer>
+</main><script src="app.js"></script></body></html>
