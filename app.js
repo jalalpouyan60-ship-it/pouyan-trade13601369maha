@@ -1,0 +1,28 @@
+const API="https://api.binance.com/api/v3";let C=null,D=[];
+const $=x=>document.getElementById(x), n=(x,d=5)=>Number(x).toLocaleString("en-US",{maximumFractionDigits:d}), sign=x=>(x>=0?"+":"")+x.toFixed(2)+"%";
+async function j(u){let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json()}
+function ema(a,p){let k=2/(p+1),e=a[0];return a.map((v,i)=>i?(e=v*k+e*(1-k)):e)}
+function rsi(a,p=14){let g=0,l=0;if(a.length<p+1)return 50;for(let i=1;i<=p;i++){let d=a[i]-a[i-1];g+=Math.max(0,d);l+=Math.max(0,-d)}let ag=g/p,al=l/p;for(let i=p+1;i<a.length;i++){let d=a[i]-a[i-1];ag=(ag*(p-1)+Math.max(0,d))/p;al=(al*(p-1)+Math.max(0,-d))/p}return al?100-100/(1+ag/al):100}
+function macd(a){let x=ema(a,12),y=ema(a,26),m=a.map((_,i)=>x[i]-y[i]),s=ema(m.slice(26),9).at(-1),z=m.at(-1);return {m:z,s,h:z-s}}
+function atr(a,p=14){let t=[];for(let i=1;i<a.length;i++)t.push(Math.max(a[i].h-a[i].l,Math.abs(a[i].h-a[i-1].c),Math.abs(a[i].l-a[i-1].c)));return t.slice(-p).reduce((x,y)=>x+y,0)/p}
+function stoch(a,p=14){let q=a.slice(-p),hi=Math.max(...q.map(x=>x.h)),lo=Math.min(...q.map(x=>x.l));return (a.at(-1).c-lo)/(hi-lo)*100}
+function row(a,b,c=""){return `<div class="row"><span>${a}</span><b>${b} ${c}</b></div>`}
+async function load(){
+ try{$("conn").textContent="داده زنده";document.querySelector(".live").className="live ok";
+ let tf=$("tf").value,[k,t,b]=await Promise.all([j(`${API}/klines?symbol=DOGEUSDT&interval=${tf}&limit=300`),j(`${API}/ticker/24hr?symbol=DOGEUSDT`),j(`${API}/depth?symbol=DOGEUSDT&limit=100`)]);
+ D=k.map(x=>({t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));let a=D.map(x=>x.c),p=+t.lastPrice,R=rsi(a),M=macd(a),E9=ema(a,9).at(-1),E20=ema(a,20).at(-1),E50=ema(a,50).at(-1),E100=ema(a,100).at(-1),E200=ema(a,200).at(-1),A=atr(D),S=stoch(D);
+ $("price").textContent=n(p,6);$("chg").textContent=sign(+t.priceChangePercent);$("chg").className=+t.priceChangePercent>=0?"up":"down";$("hi").textContent=n(+t.highPrice,6);$("lo").textContent=n(+t.lowPrice,6);$("vol").textContent=n(+t.volume,0);$("trades").textContent=n(+t.count,0);
+ let buy=0,sell=0,reasons=[];[[p>E9,1,"قیمت بالای EMA9"],[p>E20,1,"قیمت بالای EMA20"],[E20>E50,2,"EMA20 بالای EMA50"],[E50>E200,2,"روند بلندمدت مثبت"],[M.h>0,2,"MACD مثبت"],[R>50,1,"RSI بالای 50"],[S>50,1,"Stochastic مثبت"]].forEach(x=>x[0]? (buy+=x[1],reasons.push("🟢 "+x[2])):(sell+=x[1],reasons.push("🔴 "+x[2])));
+ let total=buy+sell, score=buy-sell, sig=score>=5?"شراء قوی":score>=2?"خرید":score<=-5?"فروش قوی":score<=-2?"فروش":"خنثی";$("signal").textContent=sig;$("buyScore").textContent=buy;$("sellScore").textContent=sell;$("confidence").textContent="اطمینان "+Math.round(55+Math.min(40,Math.abs(score)/total*40))+"%";$("trend").textContent=E20>E50?(p>E20?"صعودی قوی":"صعودی"):(p<E20?"نزولی قوی":"نزولی");$("risk").textContent=A/p>.035?"زیاد":A/p>.018?"متوسط":"کم";
+ $("metrics").innerHTML=[["RSI 14",R.toFixed(1),R>70?"اشباع خرید":R<30?"اشباع فروش":"متعادل"],["Stochastic",S.toFixed(1),S>80?"اشباع خرید":S<20?"اشباع فروش":"متعادل"],["MACD",n(M.m,7),M.h>0?"مثبت":"منفی"],["EMA 9",n(E9,6),p>E9?"بالا":"پایین"],["EMA 20",n(E20,6),p>E20?"بالا":"پایین"],["EMA 50",n(E50,6),p>E50?"بالا":"پایین"],["EMA 100",n(E100,6),p>E100?"بالا":"پایین"],["EMA 200",n(E200,6),p>E200?"بالا":"پایین"],["ATR",n(A,6),"نوسان"]].map(x=>row(x[0],x[1],x[2])).join("");
+ let lows=D.slice(-80).map(x=>x.l), highs=D.slice(-80).map(x=>x.h),sup=Math.max(...lows.filter(x=>x<p)),res=Math.min(...highs.filter(x=>x>p));if(!isFinite(sup))sup=p-A;if(!isFinite(res))res=p+A;
+ $("levels").innerHTML=row("حمایت نزدیک",n(sup,6))+row("قیمت فعلی",n(p,6))+row("مقاومت نزدیک",n(res,6))+row("فاصله تا مقاومت",((res-p)/p*100).toFixed(2)+"%");
+ let sl=sig.includes("خرید")?p-A*1.3:p+A*1.3, tp1=sig.includes("خرید")?p+A*1.8:p-A*1.8,tp2=sig.includes("خرید")?p+A*3:p-A*3; $("trade").innerHTML=row("ورود مرجع",n(p,6))+row("حد ضرر",n(sl,6))+row("هدف 1",n(tp1,6))+row("هدف 2",n(tp2,6))+row("R/R هدف 1","1 : "+(Math.abs(tp1-p)/Math.abs(p-sl)).toFixed(2));
+ let bv=b.bids.reduce((s,x)=>s+ +x[1],0),av=b.asks.reduce((s,x)=>s+ +x[1],0),bp=bv/(bv+av)*100; $("bidbar").textContent="خرید "+bp.toFixed(1)+"%";$("askbar").textContent="فروش "+(100-bp).toFixed(1)+"%";$("market").innerHTML=row("قدرت خرید",bp.toFixed(1)+"%")+row("قدرت فروش",(100-bp).toFixed(1)+"%")+row("Volume/24h",n(+t.volume,0))+row("دامنه 24h",sign(+t.priceChangePercent));
+ let orders=[...b.bids.map(x=>({p:+x[0],q:+x[1],z:"buy"})),...b.asks.map(x=>({p:+x[0],q:+x[1],z:"sell"}))].sort((x,y)=>y.q-x.q).slice(0,12);$("orders").innerHTML=orders.map(x=>`<div class="order ${x.z}"><span>${x.z==="buy"?"خرید":"فروش"}</span><b>${n(x.p,6)} • ${n(x.q,0)} DOGE</b></div>`).join("");
+ $("reasons").innerHTML=reasons.map(x=>`<div class="row"><span>${x}</span></div>`).join("")+row("جمع‌بندی","بر اساس ترکیب شاخص‌ها، Order Book و نوسان");
+ $("timeframes").innerHTML=["1m","5m","15m","1h","4h","1d"].map(x=>`<div class="tf"><b>${x}</b><span>${x===tf?"در حال نمایش":"برای بررسی چندتایم‌فریمی"}</span></div>`).join("");
+ $("stamp").textContent=new Date().toLocaleTimeString("fa-IR");draw();
+ }catch(e){console.error(e);$("conn").textContent="خطا در دریافت داده";document.querySelector(".live").className="live bad"}}
+function draw(){let l=D.map(x=>new Date(x.t).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"}));if(C)C.destroy();C=new Chart($("chart"),{type:"line",data:{labels:l,datasets:[{label:"DOGE/USDT",data:D.map(x=>x.c),pointRadius:0,borderWidth:2,tension:.15}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#b9c5dc"}}},scales:{x:{ticks:{color:"#74839e",maxTicksLimit:10},grid:{color:"#1d2941"}},y:{ticks:{color:"#74839e"},grid:{color:"#1d2941"}}}}})}
+$("tf").onchange=load;load();setInterval(load,30000);
